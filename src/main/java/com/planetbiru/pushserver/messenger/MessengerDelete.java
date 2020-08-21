@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -160,7 +161,7 @@ public class MessengerDelete extends Thread
 		} 
 		try
 		{
-			ArrayList<Device> deviceList = new ArrayList<Device>();
+			List<Device> deviceList = new ArrayList<>();
 			try 
 			{
 				int length = this.data.length();

@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -573,7 +572,7 @@ public class NotificationHandler extends Thread
 		
 	
 		int connection = 0;
-		ArrayList<Device> cons;
+		List<Device> cons;
 		try 
 		{
 			cons = Client.get(deviceID, apiID, groupID);

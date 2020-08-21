@@ -8,15 +8,16 @@ import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.planetbiru.pushserver.config.Config;
 import com.planetbiru.pushserver.notification.NotificationHandler;
 
 public class NotificationServer extends Thread {
 	private long requestID = 1;
 	private DataSource dataSource;
 	private Logger logger = LoggerFactory.getLogger(NotificationServer.class);
-	public NotificationServer(DataSource dataSource) {
+	int port;
+	public NotificationServer(DataSource dataSource, int port) {
 		this.dataSource = dataSource;
+		this.port = port;
 	}
 	@Override
 	public void run()
@@ -24,7 +25,7 @@ public class NotificationServer extends Thread {
 		ServerSocket serverSocket = null;
 		try 
 		{
-		    serverSocket = new ServerSocket(Config.getNotificationPort());		    
+		    serverSocket = new ServerSocket(port);		    
 	        do 
 	        {
 	        	NotificationHandler handler;

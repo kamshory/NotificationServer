@@ -2,6 +2,7 @@ package com.planetbiru.pushserver.client;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,7 +19,7 @@ public class Client
 	/**
 	 * Default constructor
 	 */
-	public Client()
+	private Client()
 	{
 		
 	}
@@ -43,9 +44,9 @@ public class Client
 	 * @return Array list contains device
 	 * @throws ClientException if any errors
 	 */
-	public static ArrayList<Device> get(String deviceID, long apiID, long groupID) throws ClientException
+	public static List<Device> get(String deviceID, long apiID, long groupID) throws ClientException
 	{
-		ArrayList<Device> deviceList;
+		List<Device> deviceList;
 		String key = deviceID+"_"+apiID+"_"+groupID;
 		if(Client.deviceList.containsKey(key))
 		{
