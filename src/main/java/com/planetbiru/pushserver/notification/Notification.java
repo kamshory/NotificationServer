@@ -381,7 +381,7 @@ public class Notification
 	 * @throws MessagingException if any errors occurred while send message
 	 * @throws NoSuchAlgorithmException if algorithm is not found
 	 */
-	public JSONObject createGroup(JSONObject requestJSON, String remoteAddress, String applicationName, String applicationVersion, String userAgent) throws JSONException, DatabaseTypeException, SQLException, AddressException, NullPointerException, IllegalArgumentException, MessagingException, NoSuchAlgorithmException
+	public JSONObject createGroup(JSONObject requestJSON, String remoteAddress, String applicationName, String applicationVersion, String userAgent) throws DatabaseTypeException, SQLException, AddressException, NullPointerException, IllegalArgumentException, MessagingException, NoSuchAlgorithmException
 	{
 		JSONObject requestData = requestJSON.optJSONObject("data");
 		if(requestData == null)
@@ -892,13 +892,13 @@ public class Notification
 		}
 		return false;
 	}
-	public JSONObject registerDevice(String body) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject registerDevice(String body) throws SQLException, DatabaseTypeException
 	{
 		JSONObject jo;
 		jo = new JSONObject(body);
 		return this.registerDevice(jo);
 	}
-	public JSONObject registerDevice(JSONObject jo) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject registerDevice(JSONObject jo) throws SQLException, DatabaseTypeException
 	{
 		QueryBuilder query1 = new QueryBuilder(Config.getDatabaseType());
 		JSONObject data = jo.optJSONObject("data");
@@ -957,13 +957,13 @@ public class Notification
 		response.put("data", data);
 		return response;
 	}	
-	public JSONObject unregisterDevice(String body) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject unregisterDevice(String body) throws SQLException, DatabaseTypeException
 	{
 		JSONObject jo;
 		jo = new JSONObject(body);
 		return this.unregisterDevice(jo);
 	}
-	public JSONObject unregisterDevice(JSONObject jo) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject unregisterDevice(JSONObject jo) throws SQLException, DatabaseTypeException
 	{
 		QueryBuilder query1 = new QueryBuilder(Config.getDatabaseType());
 		JSONObject data = jo.optJSONObject("data");
@@ -1024,7 +1024,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONObject insert(JSONObject request) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject insert(JSONObject request) throws SQLException, DatabaseTypeException
 	{
 		JSONObject requestData = request.optJSONObject("data");
 		if(requestData == null)
@@ -1033,20 +1033,17 @@ public class Notification
 		}
 		QueryBuilder query1 = new QueryBuilder(Config.getDatabaseType());
 		int i;
-		JSONArray ja = requestData.optJSONArray("deviceIDs");
+		JSONArray devices = requestData.optJSONArray("deviceIDs");
 		JSONArray ja1 = new JSONArray();
 		JSONObject jo1;	
-		JSONObject dataToSent;
-		
+		JSONObject dataToSent;		
 		
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		try 
 		{
-			conn = this.dataSource.getConnection();
-			
-			
-			if(ja.length() > 0)
+			conn = this.dataSource.getConnection();			
+			if(devices.length() > 0)
 			{
 				JSONObject notificationData = requestData.optJSONObject("data");			
 				String type = notificationData.optString("type", "");
@@ -1104,9 +1101,9 @@ public class Notification
 				String sqlCommand = "";
 				String lDeviceID = "";
 				boolean registered = false;			
-				for(i = 0; i < ja.length(); i++)
+				for(i = 0; i < devices.length(); i++)
 				{
-					lDeviceID = ja.getString(i).trim();	
+					lDeviceID = devices.getString(i).trim();	
 					registered = Cache.isRegisteredDevice(this.apiID, lDeviceID);
 					if(!registered)
 					{
@@ -1124,14 +1121,13 @@ public class Notification
 								.fields("(api_id, client_group_id, device_id, type, title, subtitle, message, ticker_text, uri, click_action, color, vibrate, sound, badge, large_icon, small_icon, misc_data, time_create, time_gmt)")
 								.values("("+this.apiID+", "+this.groupID+", '"+lDeviceID+"', '"+type+"', '"+title+"', '"+subtitle+"', '"+message+"', '"+tickerText+"', '"+uri+"', '"+clickAction+"', '"+color+"', '"+vibrate+"', '"+sound+"', '"+badge+"', '"+largeIcon+"', '"+smallIcon+"', '"+miscData+"', '"+timeCreate+"', '"+timeGMT+"')")
 								.toString();
-						
 						JdbcUtils.closeStatement(stmt);
 						stmt = conn.prepareStatement(sqlCommand);
 						stmt.execute();	
 						
 						long notificationID = this.database.getLastAutoIncrement(conn);
 						dataToSent.put("id", notificationID);
-						ArrayList<Device> deviceList = new ArrayList<>();
+						List<Device> deviceList = new ArrayList<>();
 						int deviceOn = 0;
 						try 
 						{
@@ -1145,7 +1141,9 @@ public class Notification
 						} 
 						catch (ClientException e) 
 						{
-							logger.error(e.getMessage());
+							/**
+							 * Do nothing
+							 */
 						}
 						jo1.put("id", notificationID);
 						jo1.put("deviceID", lDeviceID);
@@ -1165,7 +1163,7 @@ public class Notification
 			JdbcUtils.closeConnection(conn);			
 		}
 		JSONObject responseData = new JSONObject();
-		responseData.put("notification", ja);
+		responseData.put("notification", devices);
 		JSONObject response = new JSONObject();
 		response.put("command", "push-notification");
 		response.put("data", responseData);
@@ -1187,6 +1185,7 @@ public class Notification
 			.from(Config.getTablePrefix()+"client")
 			.where("api_id = '"+apiID+"' and device_id = '"+deviceID+"' and active = 1 and blocked = 0")
 			.toString();
+		boolean found = false;
 		Connection conn = null;
 		PreparedStatement stmt = null;
 		ResultSet rs = null;		
@@ -1195,10 +1194,9 @@ public class Notification
 			conn = this.dataSource.getConnection();
 			stmt = conn.prepareStatement(sqlCommand);
 			rs = stmt.executeQuery();	
-
-			if(!rs.isBeforeFirst())
+			if(rs.isBeforeFirst())
 			{
-				return true;
+				found = true;
 			}
 		}
 		catch (SQLException e) 
@@ -1211,7 +1209,7 @@ public class Notification
 			JdbcUtils.closeStatement(stmt);
 			JdbcUtils.closeConnection(conn);			
 		}
-		return false;
+		return found;
 	}
 	/**
 	 * Select offline notification stored on the database with limit.
@@ -1224,7 +1222,7 @@ public class Notification
 	 * @throws DatabaseTypeException if database type not supported
 	 * @throws JSONException if any JSON errors 
 	 */
-	public JSONArray select(long apiID, String deviceID, long groupID, long limit) throws SQLException, DatabaseTypeException, JSONException
+	public JSONArray select(long apiID, String deviceID, long groupID, long limit) throws SQLException, DatabaseTypeException
 	{
 		this.apiID = apiID;
 		this.deviceID = deviceID;
@@ -1409,7 +1407,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONObject delete(JSONObject request) throws SQLException, JSONException, DatabaseTypeException
+	public JSONObject delete(JSONObject request) throws SQLException, DatabaseTypeException
 	{
 		JSONObject data = request.optJSONObject("data");
 		JSONObject jo;
@@ -1452,7 +1450,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONArray delete(long apiID, String deviceID, long groupID, long id) throws JSONException, SQLException, DatabaseTypeException
+	public JSONArray delete(long apiID, String deviceID, long groupID, long id) throws SQLException, DatabaseTypeException
 	{
 		long[] ids = new long[1];
 		ids[0] = id;
@@ -1469,7 +1467,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONArray delete(long apiID, String deviceID, long groupID, long[] ids) throws JSONException, SQLException, DatabaseTypeException
+	public JSONArray delete(long apiID, String deviceID, long groupID, long[] ids) throws SQLException, DatabaseTypeException
 	{
 		JSONArray data = new JSONArray();	
 		JSONObject jo;
@@ -1526,7 +1524,7 @@ public class Notification
 	 * @return JSONArray which is a combination of both inputs
 	 * @throws JSONException if any JSON errors
 	 */
-	public JSONArray concatArray(JSONArray arr1, JSONArray arr2) throws JSONException 
+	public JSONArray concatArray(JSONArray arr1, JSONArray arr2) 
 	{
 	    JSONArray result = new JSONArray();
 	    for (int i = 0; i < arr1.length(); i++) 
@@ -1548,7 +1546,7 @@ public class Notification
 	 * @throws JSONException if any JSON errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public void insertDeletionLog(long apiID, long groupID, JSONArray data) throws SQLException, JSONException, DatabaseTypeException  
+	public void insertDeletionLog(long apiID, long groupID, JSONArray data) throws SQLException, DatabaseTypeException  
 	{
 		QueryBuilder query1 = new QueryBuilder(Config.getDatabaseType());
 		String sqlCommand = "";
@@ -1601,7 +1599,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONArray selectDeletionLog(long apiID, String deviceID, long groupID) throws JSONException, SQLException, DatabaseTypeException 
+	public JSONArray selectDeletionLog(long apiID, String deviceID, long groupID) throws SQLException, DatabaseTypeException 
 	{
 		return this.selectDeletionLog(apiID, deviceID, groupID, 0);
 	}
@@ -1616,7 +1614,7 @@ public class Notification
 	 * @throws SQLException if any SQL errors 
 	 * @throws DatabaseTypeException if database type not supported 
 	 */
-	public JSONArray selectDeletionLog(long apiID, String deviceID, long groupID, long limit) throws JSONException, SQLException, DatabaseTypeException 
+	public JSONArray selectDeletionLog(long apiID, String deviceID, long groupID, long limit) throws SQLException, DatabaseTypeException 
 	{
 		QueryBuilder query1 = new QueryBuilder(Config.getDatabaseType());
 		String sqlCommand = "";

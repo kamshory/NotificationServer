@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -31,9 +32,9 @@ public class HttpRequestHandler
 {
 	private Logger logger = LoggerFactory.getLogger(HttpRequestHandler.class);
 	@SuppressWarnings("unused")
-	private static final String X_REAL_IP = "x-real-ip";
+	private final String X_REAL_IP = "x-real-ip";
     @SuppressWarnings("unused")
-	private static final String HEADER_CLIENT_CODE = "x-client-code";
+	private final String HEADER_CLIENT_CODE = "x-client-code";
     @Autowired
     private DataSource dataSource;
     @Autowired
@@ -41,175 +42,175 @@ public class HttpRequestHandler
 	private String timeZone;
     
     @Value("${push.application.name:Planet Notif}")
-    private static String applicationName;
+    private String applicationName;
 
     /**
 	 * Create encrypted database configuration
 	 */
     @Value("${push.create.configuration:false}")
-	private static boolean createConfiguration;
+	private boolean createConfiguration;
 	/**
 	 * Run service in development mode
 	 */
     @Value("${push.development.mode:false}")
-	private static boolean developmentMode;
+	private boolean developmentMode;
 	/**
 	 * Run service in debug mode
 	 */
     @Value("${push.debug.mode:true}")
-	private static boolean debugMode;
+	private boolean debugMode;
 	/**
 	 * Print stack trace
 	 */
     @Value("${push.print.stack.trace:true}")
-	private static boolean printStackTrace;
+	private boolean printStackTrace;
 	/**
 	 * Indicate that configuration is loaded successfully
 	 */
     @Value("${push.read.configuration.success:false}")
-	private static boolean readConfigSuccess;
+	private boolean readConfigSuccess;
 	/**
 	 * API version
 	 */
     @Value("${push.version:1.0.0}")
-	private static String version;
+	private String version;
     
     @Value("${push.proxy.enabled:false}")
-	private static boolean httpProxyEnabled;
+	private boolean httpProxyEnabled;
     
     @Value("${push.http.address.forwarder:x-remote-address-forwarder}")
-	private static String httpAddressForwarder;
+	private String httpAddressForwarder;
 	
 	/**
 	 * Client port
 	 */
-    @Value("${push.notification.port:92}")
-    private static int notificationPort;
+    @Value("${push.notification.port.http:96}")
+    private int notificationPort;
 	/**
 	 * Client port
 	 */
-    @Value("${push.notification.port.ssl:93}")
-	private static int notificationPortSSL;
+    @Value("${push.notification.port.https:97}")
+	private int notificationPortSSL;
 	/**
 	 * Inspection interval
 	 */
     @Value("${push.inspection.interval:1800000}")
-	private static long inspectionInterval;
+	private long inspectionInterval;
 	/**
 	 * Wait for answer. Server will wait until a connection reply with valid answer
 	 */
     @Value("${push.wait.for.answer:30000}")
-	private static long waitForAnswer;
+	private long waitForAnswer;
 	/**
 	 * Filter pusher source
 	 */
-    @Value("${push.filter.source=true}")
-	private static boolean filterSource;
+    @Value("${push.filter.source:true}")
+	private boolean filterSource;
 	/**
 	 * Require group approval
 	 */
-    @Value("${push.group.creation.approval=true}")
-	private static boolean groupCreationApproval;
+    @Value("${push.group.creation.approval:true}")
+	private boolean groupCreationApproval;
 	/**
 	 * Maximum number of notification on once load
 	 */
-    @Value("${push.limit.notification=50}")
-	private static long limitNotification;
+    @Value("${push.limit.notification:50}")
+	private long limitNotification;
 	/**
 	 * Maximum number of notification deletion on once load
 	 */
-    @Value("${push.limit.trash=50}")
-	private static long limitTrash;
+    @Value("${push.limit.trash:50}")
+	private long limitTrash;
 	/**
 	 * Table prefix. By the table prefix, user can integrate push notification database to their own system without any conflict
 	 */
-    @Value("${push.table.prefix=push_}")
-	private static String tablePrefix;
+    @Value("${push.table.prefix:push_}")
+	private String tablePrefix;
 	/**
 	 * Clean up time
 	 */
     @Value("${push.clean.up.time:03:00}")
-	private static String cleanUpTime;
+	private String cleanUpTime;
 	/**
 	 * Period to delete sent notification (in day). All sent notifications will be deleted after this period
 	 */
     @Value("${push.delete.notif.sent:2}")
-	private static long deleteNotifSent;
+	private long deleteNotifSent;
 	/**
 	 * Period to delete unsent notification (in day). All unsent notifications will be deleted after this period
 	 */
     @Value("${push.delete.notif.not.sent:10}")
-	private static long deleteNotifNotSent;
+	private long deleteNotifNotSent;
 	/**
 	 * Key to encrypt and decrypt database configuration.<br>
 	 * On the production server, this key is stored in the database and can only be accessed when the service is started. Once the service is running, the database that stores the key must be turned off.
 	 */
     @Value("${push.encryption.password:1234567890}")
-	private static String encryptionPassword;
+	private String encryptionPassword;
 	/**
 	 * Flag secure content. If set as true, notification will be encrypted using combination of key sent from server and client hash password
 	 */
     @Value("${push.content.secure:false}")
-	private static boolean contentSecure;
+	private boolean contentSecure;
 	/**
 	 * Redirect user when access document root
 	 */
     @Value("${push.redirect.home:https://www.planetbiru.com}")
-	private static String redirectHome;
+	private String redirectHome;
 	/**
 	 * Mail host
 	 */
     @Value("${push.mail.host:localhost}")
-	private static String mailHost;
+	private String mailHost;
 	/**
 	 * Mail port
 	 */
     @Value("${push.mail.port:25}")
-	private static int mailPort;
+	private int mailPort;
 	/**
 	 * Mail sender of pusher address approval
 	 */
     @Value("${push.mail.sender:kamshory@gmail.com}")
-	private static String mailSender;
+	private String mailSender;
 	/**
 	 * Mail template of pusher address approval
 	 */
     @Value("${push.mail.template}")
-	private static String mailTemplate;
+	private String mailTemplate;
 	/**
 	 * Mail subject of pusher address approval
 	 */
     @Value("${push.mail.subject:Pusher Address Confirmation}")
-	private static String mailSubject;
+	private String mailSubject;
 	/**
 	 * Default URL template of pusher address approval when reading template is failed
 	 */
     @Value("${push.approval.url.template:http://push.example.com/approve-address/?auth={auth}}")
-	private static String approvalURLTemplate;
+	private String approvalURLTemplate;
 	/**
 	 * Use SMTP authentication
 	 */
-    @Value("${push.mail.use:auth:false}")
-	private static boolean mailUseAuth;
+    @Value("${push.mail.use.auth:false}")
+	private boolean mailUseAuth;
 	/**
 	 * SMPT username
 	 */
     @Value("${push.mail.username}")
-	private static String mailUsername;
+	private String mailUsername;
 	/**
 	 * SMTP password
 	 */
     @Value("${push.mail.password}")
-	private static String mailPassword;
+	private String mailPassword;
 	/**
 	 * SMTP encrypted password
 	 */
     @Value("${push.mail.password.encrypted}")
-	private static String mailPasswordEncrypted;
+	private String mailPasswordEncrypted;
     @Value("${push.wait.free.up.port:200}")
-	private static long waitFreeUpPort;
+	private long waitFreeUpPort;
     @Value("${push.database.type:mariadb}")
-	private static String databaseType;
+	private String databaseType;
 
     
     private NotificationServer notificationServer = null;
@@ -217,7 +218,6 @@ public class HttpRequestHandler
     @PostConstruct
     private void init() 
     {
-    	
     	Config.setApplicationName(applicationName);
     	/**
     	 * Create encrypted database configuration
@@ -349,14 +349,54 @@ public class HttpRequestHandler
     	Config.setMailPasswordEncrypted(mailPasswordEncrypted);
     	Config.setWaitFreeUpPort(waitFreeUpPort);
     	Config.setDatabaseType(databaseType);
-
-    	this.notificationServer = new NotificationServer(this.dataSource);
+    	
+    	this.notificationServer = new NotificationServer(this.dataSource, Config.getNotificationPort());
 		this.notificationServer.start();
 
     }
-
-	@PostMapping(path="/")
-	public ResponseEntity<String> handlePost(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	@GetMapping(path="/")
+	public ResponseEntity<String> handleGetHome(@RequestHeader HttpHeaders headers, HttpServletRequest request)
+	{
+		String responseBody = "";
+		HttpHeaders responseHeaders = new HttpHeaders();
+		HttpStatus httpStatus = HttpStatus.OK;
+		return (new ResponseEntity<>(responseBody, responseHeaders , httpStatus));
+	}
+	@GetMapping(path="/ping")
+	public ResponseEntity<String> handleGetPing(@RequestHeader HttpHeaders headers, HttpServletRequest request)
+	{
+		String responseBody = "";
+		HttpHeaders responseHeaders = new HttpHeaders();
+		HttpStatus httpStatus = HttpStatus.OK;
+		return (new ResponseEntity<>(responseBody, responseHeaders , httpStatus));
+	}
+	@PostMapping(path="/notif/1.0.0/pusher")
+	public ResponseEntity<String> handlePostPusher(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	{
+		return this.handlePost(headers, requestBody, request);
+	}
+	@PostMapping(path="/notif/1.0.0/remover")
+	public ResponseEntity<String> handlePostRemover(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	{
+		return this.handlePost(headers, requestBody, request);
+	}
+	@PostMapping(path="/notif/1.0.0/create-group")
+	public ResponseEntity<String> handlePostCreateGouup(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	{
+		return this.handlePost(headers, requestBody, request);
+	}
+	@PostMapping(path="/notif/1.0.0/register-device")
+	public ResponseEntity<String> handlePostRegisterDevice(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	{
+		return this.handlePost(headers, requestBody, request);
+	}
+	@PostMapping(path="/notif/1.0.0/unregister-device")
+	public ResponseEntity<String> handlePostUegisterDevice(@RequestHeader HttpHeaders headers, @RequestBody String requestBody, HttpServletRequest request)
+	{
+		return this.handlePost(headers, requestBody, request);
+	}
+	
+	public ResponseEntity<String> handlePost(HttpHeaders headers, String requestBody, HttpServletRequest request)
 	{
 		String remoteAddress = request.getRemoteAddr();
 		String responseBody = "";
@@ -381,6 +421,10 @@ public class HttpRequestHandler
 			String applicationVersion = headers.getFirst("x-application-version");
 			String userAgent = headers.getFirst("user-agent");
 			String authorization = headers.getFirst("authorization");
+			if(authorization.startsWith("Bearer "))
+			{
+				authorization = authorization.substring("Bearer ".length());
+			}
 			JSONObject requestJSON = new JSONObject(requestBody);
 			if(notification.authentication(authorization, remoteAddress, applicationName, applicationVersion, userAgent))
 			{
